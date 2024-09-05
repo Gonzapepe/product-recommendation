@@ -23,6 +23,6 @@ If you don't have MongoDB installed, please follow these steps:
 
 # TODO
 
-* Write unit tests for edge cases of the product service
-* Write unit tests for the brain service
-* 
+- [ ] Write unit tests for edge cases of the product service
+- [ ] Write unit tests for the brain service
+- [ ] Add docker
