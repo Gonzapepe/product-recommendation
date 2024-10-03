@@ -14,7 +14,7 @@ import (
 
 var (
 	productService services.ProductService
-	brainService *services.BrainService
+	brainService   *services.BrainService
 )
 
 func main() {
@@ -45,7 +45,7 @@ func InitRoutes() {
 	router := gin.Default()
 
 	v1 := router.Group("/v1")
-	
+
 	productHandler := handlers.NewProductHandler(productService, *brainService)
 
 	v1.POST("/products", productHandler.CreateProduct)

@@ -26,10 +26,14 @@ func (r *productRepository) GetByID(id string) (*entities.Product, error) {
     var product entities.Product
     err := r.collection.FindOne(context.TODO(), bson.M{"id": id}).Decode(&product)
 
-    return &product, err
+    if err != nil {
+        return nil, err
+    }
+
+    return &product, nil
 }
 
-func (r *productRepository) GetPaginatedProducts(offset, limit int) ([]*entities.Product, error) {
+func (r *productRepository) GetPaginated(offset, limit int) ([]*entities.Product, error) {
     var products []*entities.Product
 
     findOptions := options.Find()

@@ -15,30 +15,30 @@ func init() {
 }
 
 type Product struct {
-	ID          string               `json:"id" bson:"id,omitempty"`
-	StoreID     string               `json:"storeId,omitempty" bson:"storeId"`
-	Categories  []CategoryForProduct `json:"categories,omitempty" bson:"categories"`
-	Description Description          `json:"description,omitempty" bson:"description"`
-	Images      []Image              `json:"images,omitempty" bson:"images"`
-	Name        Name                 `json:"name,omitempty" bson:"name" validate:"required"`
-	Published   bool                 `json:"published,omitempty" bson:"published"`
-	Urls        Urls                 `json:"urls,omitempty" bson:"urls"`
-	Variants    []Variant            `json:"variants,omitempty" bson:"variants"`
-	SoldCount   int                  `json:"soldCount,omitempty" bson:"soldCount" validate:"gte=0"`
-	ClickCount  int                  `json:"clickCoçunt,omitempty" bson:"clickCount" validate:"gte=0"`
-	CreatedAt   time.Time            `json:"createdAt,omitempty" bson:"createdAt"`
-	UpdatedAt   time.Time            `json:"updatedAt,omitempty" bson:"updatedAt"`
+	ID          string      `json:"id" bson:"id,omitempty"`
+	StoreID     string      `json:"storeId,omitempty" bson:"storeId"`
+	Categories  []string    `json:"categories,omitempty" bson:"categories"`
+	Description Description `json:"description,omitempty" bson:"description"`
+	Images      []Image     `json:"images,omitempty" bson:"images"`
+	Name        Name        `json:"name,omitempty" bson:"name" validate:"required"`
+	Published   bool        `json:"published,omitempty" bson:"published"`
+	Urls        Urls        `json:"urls,omitempty" bson:"urls"`
+	Variants    []Variant   `json:"variants,omitempty" bson:"variants"`
+	SoldCount   int         `json:"soldCount,omitempty" bson:"soldCount" validate:"gte=0"`
+	ClickCount  int         `json:"clickCoçunt,omitempty" bson:"clickCount" validate:"gte=0"`
+	CreatedAt   time.Time   `json:"createdAt,omitempty" bson:"createdAt"`
+	UpdatedAt   time.Time   `json:"updatedAt,omitempty" bson:"updatedAt"`
 }
 
-type CategoryForProduct struct {
-	ID            string       `json:"id" bson:"id"`
-	Name          CategoryName `json:"name" bson:"name"`
-	Subcategories []string     `json:"subcategories" bson:"subcategories"`
+type Category struct {
+	ID            string   `json:"id" bson:"id"`
+	Name          string   `json:"name" bson:"name"`
+	Subcategories []string `json:"subcategories" bson:"subcategories"`
 }
 
-type CategoryName struct {
-	LocalizedString `bson:",inline"`
-}
+// type CategoryName struct {
+// 	LocalizedString `bson:",inline"`
+// }
 
 type Description struct {
 	LocalizedString `bson:",inline"`
@@ -112,12 +112,10 @@ func (ct CustomTime) MarshalBSON() ([]byte, error) {
 	return bson.Marshal(ct.Time)
 }
 
-
-
 type ErrorResponse struct {
 	FailedField string `json:"failed_field"`
-	Tag string `json:"tag"`
-	Value string `json:"value"`
+	Tag         string `json:"tag"`
+	Value       string `json:"value"`
 }
 
 func ValidateStruct(s interface{}) []*ErrorResponse {

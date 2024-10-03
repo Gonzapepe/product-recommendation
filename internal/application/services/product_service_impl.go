@@ -18,7 +18,7 @@ func (s *productService) GetProductByID(id string) (*entities.Product, error) {
 }
 
 func (s *productService) GetPaginatedProducts(offset, limit int) ([]*entities.Product, error) {
-    return s.repo.GetPaginatedProducts(offset, limit)
+    return s.repo.GetPaginated(offset, limit)
 }
 
 func (s *productService) GetAllProducts() ([]*entities.Product, error) {
