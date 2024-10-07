@@ -5,6 +5,7 @@ import (
 	"backend-challenge/internal/domain/repositories"
 
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 
 	"context"
@@ -69,6 +70,8 @@ func (r *categoryRepository) GetByID(id string) (*entities.Category, error) {
 }
 
 func (r *categoryRepository) Create(category *entities.Category) error {
+	category.ID = primitive.NewObjectID()
+
 	_, err := r.collection.InsertOne(context.TODO(), category)
 
 	if err != nil {

@@ -14,7 +14,8 @@ import (
 
 var (
 	productService services.ProductService
-	brainService   *services.BrainService
+	categoryService services.CategoryService
+	// brainService   *services.BrainService
 )
 
 func main() {
@@ -35,8 +36,14 @@ func main() {
 
 	productService = services.NewProductService(productRepo)
 
+	categoryRepo := repository.NewCategoryRepository(mongoClient, "backend-challenge", "categories")
+	
+	categoryService  = services.NewCategoryService(categoryRepo)
+	
 	// Amount of product recommendations
-	brainService = services.NewBrainService(15)
+	// brainService = services.NewBrainService(15)
+
+
 
 	InitRoutes()
 }
@@ -46,13 +53,21 @@ func InitRoutes() {
 
 	v1 := router.Group("/v1")
 
-	productHandler := handlers.NewProductHandler(productService, *brainService)
+	productHandler := handlers.NewProductHandler(productService, /*brainService*/)
 
 	v1.POST("/products", productHandler.CreateProduct)
 	v1.GET("/products", productHandler.GetAllProducts)
 	v1.GET("/products/:id", productHandler.GetProductByID)
 	v1.PUT("/products/:id", productHandler.UpdateProduct)
 	v1.DELETE("products/:id", productHandler.DeleteProduct)
+
+	categoryHandler := handlers.NewCategoryHandler(categoryService)
+
+	v1.POST("/categories", categoryHandler.CreateCategory)
+	v1.GET("/categories", categoryHandler.GetAllCategories)
+	v1.GET("/categories/:id", categoryHandler.GetCategoryByID)
+	v1.PUT("/categories/:id", categoryHandler.UpdateCategory)
+	v1.DELETE("/categories/:id", categoryHandler.DeleteCategory)
 
 	router.Run(":8080")
 }

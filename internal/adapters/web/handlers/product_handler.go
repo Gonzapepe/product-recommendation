@@ -14,17 +14,17 @@ import (
 
 type ProductHandler struct {
 	productService services.ProductService
-	brainService	services.BrainService
+	// brainService	services.BrainService
 }
 
 func generateNewID() string {
 	return uuid.New().String()
 }
 
-func NewProductHandler(productService services.ProductService, brainService services.BrainService) *ProductHandler {
+func NewProductHandler(productService services.ProductService, /*brainService services.BrainService */) *ProductHandler {
 	return &ProductHandler{
 		productService: productService,
-		brainService: *services.NewBrainService(15),
+		// brainService: *services.NewBrainService(15),
 	}
 }
 
@@ -55,21 +55,21 @@ func (h *ProductHandler) GetAllProducts(c *gin.Context) {
 		return
 	}
 
-	allProducts, err := h.productService.GetAllProducts()
+	// allProducts, err := h.productService.GetAllProducts()
 	if err != nil {
 		HandleError(c, http.StatusInternalServerError, err)
 		return
 	}
 
 
-	boundaries, rules := parseRecommendationParams(c)
+	// boundaries, rules := parseRecommendationParams(c)
 
-	recommendations, metadata := h.brainService.GenerateProductSuggestions(allProducts, paginatedProducts, boundaries, rules)
+	// recommendations, metadata := h.brainService.GenerateProductSuggestions(allProducts, paginatedProducts, boundaries, rules)
 
 	c.JSON(http.StatusOK, gin.H{
 		"products": paginatedProducts,
-		"recommendations": recommendations,
-		"recommendaiton_metadata": metadata,
+		// "recommendations": recommendations,
+		// "recommendaiton_metadata": metadata,
 	})
 }
 

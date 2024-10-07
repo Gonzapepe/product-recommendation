@@ -6,6 +6,7 @@ import (
 
 	"github.com/go-playground/validator/v10"
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 var validate *validator.Validate
@@ -31,9 +32,11 @@ type Product struct {
 }
 
 type Category struct {
-	ID            string   `json:"id" bson:"id"`
-	Name          string   `json:"name" bson:"name"`
-	Subcategories []string `json:"subcategories" bson:"subcategories"`
+	ID            primitive.ObjectID `json:"id,omitempty" bson:"_id"`
+	Name          string             `json:"name,omitempty" bson:"name"`
+	Subcategories []string           `json:"subcategories,omitempty" bson:"subcategories"`
+	CreatedAt     time.Time          `json:"createdAt,omitempty" bson:"createdAt"`
+	UpdatedAt     time.Time          `json:"updatedAt,omitempty" bson:"updatedAt"`
 }
 
 // type CategoryName struct {
