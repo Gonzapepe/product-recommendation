@@ -58,9 +58,15 @@ func (r *categoryRepository) GetAll() ([]*entities.Category, error) {
 func (r *categoryRepository) GetByID(id string) (*entities.Category, error) {
 	var category entities.Category
 
-	filter := bson.M{"_id": id}
+	objectId, err := primitive.ObjectIDFromHex(id)
 
-	err := r.collection.FindOne(context.TODO(), filter).Decode(&category)
+	if err != nil {
+		return nil, err
+	}
+
+	filter := bson.M{"_id": objectId}
+
+	err = r.collection.FindOne(context.TODO(), filter).Decode(&category)
 
 	if err != nil {
 		return nil, err

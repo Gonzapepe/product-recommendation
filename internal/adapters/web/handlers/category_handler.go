@@ -24,7 +24,14 @@ func NewCategoryHandler(categoryService services.CategoryService) *CategoryHandl
 func (h *CategoryHandler) GetCategoryByID(c *gin.Context) {
 	id := c.Param("id")
 
-	category, err := h.categoryService.GetCategoryByID(id)
+	categoryID, err := primitive.ObjectIDFromHex(id)
+
+	if err != nil {
+		HandleError(c, http.StatusBadRequest, err)
+		return
+	}
+
+	category, err := h.categoryService.GetCategoryByID(categoryID.Hex())
 
 	if err != nil {
 		HandleError(c, http.StatusNotFound, err)
