@@ -26,7 +26,7 @@ type Product struct {
 	Urls        Urls        `json:"urls,omitempty" bson:"urls"`
 	Variants    []Variant   `json:"variants,omitempty" bson:"variants"`
 	SoldCount   int         `json:"soldCount,omitempty" bson:"soldCount" validate:"gte=0"`
-	ClickCount  int         `json:"clickCoçunt,omitempty" bson:"clickCount" validate:"gte=0"`
+	ClickCount  int         `json:"clickCount,omitempty" bson:"clickCount" validate:"gte=0"`
 	CreatedAt   time.Time   `json:"createdAt,omitempty" bson:"createdAt"`
 	UpdatedAt   time.Time   `json:"updatedAt,omitempty" bson:"updatedAt"`
 }
