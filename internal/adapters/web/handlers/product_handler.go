@@ -55,12 +55,6 @@ func (h *ProductHandler) GetAllProducts(c *gin.Context) {
 		return
 	}
 
-	// allProducts, err := h.productService.GetAllProducts()
-	if err != nil {
-		HandleError(c, http.StatusInternalServerError, err)
-		return
-	}
-
 
 	// boundaries, rules := parseRecommendationParams(c)
 
