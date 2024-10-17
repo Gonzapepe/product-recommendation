@@ -102,7 +102,7 @@ func (r *categoryRepository) Update(category *entities.Category) error {
 		jsonTag := field.Tag.Get("json")
 		tagParts := strings.Split(jsonTag, ",")
 		tag := tagParts[0]
-		
+
 		if !isZeroType(val) {
 			update := bson.E{Key: tag, Value: val.Interface()}
 
@@ -120,7 +120,14 @@ func (r *categoryRepository) Update(category *entities.Category) error {
 }
 
 func (r *categoryRepository) Delete(id string) error {
-	_, err := r.collection.DeleteOne(context.TODO(), bson.M{"_id": id})
+	objectId, err := primitive.ObjectIDFromHex(id)
+
+	if err != nil {
+		return err
+	}
+
+
+	_, err = r.collection.DeleteOne(context.TODO(), bson.M{"_id": objectId})
 
 	if err != nil {
 		return err
