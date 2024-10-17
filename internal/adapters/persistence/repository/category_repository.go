@@ -3,6 +3,7 @@ package repository
 import (
 	"backend-challenge/internal/domain/entities"
 	"backend-challenge/internal/domain/repositories"
+	"strings"
 
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -88,17 +89,20 @@ func (r *categoryRepository) Create(category *entities.Category) error {
 }
 
 func (r *categoryRepository) Update(category *entities.Category) error {
-	typeData := reflect.TypeOf(category)
+	typeData := reflect.TypeOf(*category)
 
-	values := reflect.ValueOf(category)
+	values := reflect.ValueOf(*category)
 	
 	updates := bson.D{}
 
 	for i := 1; i < typeData.NumField(); i++ {
 		field := typeData.Field(i)
 		val := values.Field(i)
-		tag := field.Tag.Get("json")
-
+		
+		jsonTag := field.Tag.Get("json")
+		tagParts := strings.Split(jsonTag, ",")
+		tag := tagParts[0]
+		
 		if !isZeroType(val) {
 			update := bson.E{Key: tag, Value: val.Interface()}
 
