@@ -47,11 +47,11 @@ func TestCreateCategory_Valid(t *testing.T) {
 	categoryRepo := repository.NewCategoryRepository(testDB, "backend-challenge-test", "categories")
 
 	category := &entities.Category{
-		ID:          primitive.NewObjectID(),
-		Name: "Electronics",
+		ID:            primitive.NewObjectID(),
+		Name:          "Electronics",
 		Subcategories: []string{"Phones", "Laptops"},
-		CreatedAt: time.Now(),
-		UpdatedAt: time.Now(),
+		CreatedAt:     time.Now(),
+		UpdatedAt:     time.Now(),
 	}
 
 	// Insert the category into the repository
@@ -72,10 +72,10 @@ func TestCreateCategory_MissingName(t *testing.T) {
 	categoryRepo := repository.NewCategoryRepository(testDB, "backend-challenge-test", "categories")
 
 	category := &entities.Category{
-		ID: primitive.NewObjectID(),
+		ID:            primitive.NewObjectID(),
 		Subcategories: []string{"Phones", "Laptops"},
-		CreatedAt: time.Now(),
-		UpdatedAt: time.Now(),
+		CreatedAt:     time.Now(),
+		UpdatedAt:     time.Now(),
 	}
 
 	err := categoryRepo.Create(category)
@@ -86,13 +86,13 @@ func TestCreateCategory_MissingName(t *testing.T) {
 func TestCreateCategory_DuplicateID(t *testing.T) {
 
 	categoryRepo := repository.NewCategoryRepository(testDB, "backend-challenge-test", "categories")
-	
+
 	category := &entities.Category{
-		ID: primitive.NewObjectID(),
-		Name: "Clothing",
+		ID:            primitive.NewObjectID(),
+		Name:          "Clothing",
 		Subcategories: []string{"Men", "Women"},
-		CreatedAt: time.Now(),
-		UpdatedAt: time.Now(),
+		CreatedAt:     time.Now(),
+		UpdatedAt:     time.Now(),
 	}
 
 	err := categoryRepo.Create(category)
@@ -100,13 +100,13 @@ func TestCreateCategory_DuplicateID(t *testing.T) {
 	assert.NoError(t, err, "expected no error when creating first category")
 
 	duplicateCategory := &entities.Category{
-		ID: category.ID,
-		Name: "Footwear",
+		ID:            category.ID,
+		Name:          "Footwear",
 		Subcategories: []string{"Shoes", "Sandals"},
-		CreatedAt: time.Now(),
-		UpdatedAt: time.Now(),
+		CreatedAt:     time.Now(),
+		UpdatedAt:     time.Now(),
 	}
-	
+
 	err = categoryRepo.Create(duplicateCategory)
 
 	assert.Error(t, err, "expected error when creating duplicate category")
@@ -116,11 +116,11 @@ func TestCreateCategory_EmptySubcategories(t *testing.T) {
 	categoryRepo := repository.NewCategoryRepository(testDB, "backend-challenge-test", "categories")
 
 	category := &entities.Category{
-		ID: primitive.NewObjectID(),
-		Name: "Accesories",
+		ID:            primitive.NewObjectID(),
+		Name:          "Accesories",
 		Subcategories: []string{},
-		CreatedAt: time.Now(),
-		UpdatedAt: time.Now(),
+		CreatedAt:     time.Now(),
+		UpdatedAt:     time.Now(),
 	}
 
 	err := categoryRepo.Create(category)
