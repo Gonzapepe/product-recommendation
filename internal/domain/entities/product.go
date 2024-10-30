@@ -33,7 +33,7 @@ type Product struct {
 
 type Category struct {
 	ID            primitive.ObjectID `json:"id,omitempty" bson:"_id"`
-	Name          string             `json:"name,omitempty" bson:"name"`
+	Name          string             `json:"name,omitempty" bson:"name" validate:"required"`
 	Subcategories []string           `json:"subcategories,omitempty" bson:"subcategories"`
 	CreatedAt     time.Time          `json:"createdAt,omitempty" bson:"createdAt"`
 	UpdatedAt     time.Time          `json:"updatedAt,omitempty" bson:"updatedAt"`
