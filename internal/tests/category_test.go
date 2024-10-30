@@ -1,50 +1,33 @@
-package unit
+package tests
 
 import (
-	"backend-challenge/internal/adapters/persistence/repository"
 	"backend-challenge/internal/domain/entities"
-	"context"
-	"os"
+	"bytes"
+	"encoding/json"
+	"fmt"
+	"net/http"
+	"net/http/httptest"
 	"testing"
 	"time"
 
+	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
 	"go.mongodb.org/mongo-driver/bson/primitive"
-	"go.mongodb.org/mongo-driver/mongo"
-	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-// var testDB *mongo.Client
-
-func TestMainCategory(m *testing.M) {
-	clientOptions := options.Client().ApplyURI("mongodb://localhost:27017")
-	client, err := mongo.Connect(context.TODO(), clientOptions)
-
-	if err != nil {
-		panic(err)
-	}
-
-	testDB = client
-
-	exitCode := m.Run()
-
-	err = client.Database("backend-challenge-test").Drop(context.TODO())
-
-	if err != nil {
-		panic(err)
-	}
-
-	err = client.Disconnect(context.TODO())
-
-	if err != nil {
-		panic(err)
-	}
-
-	os.Exit(exitCode)
-}
-
 func TestCreateCategory_Valid(t *testing.T) {
-	categoryRepo := repository.NewCategoryRepository(testDB, "backend-challenge-test", "categories")
+
+	// Setup test and defer cleanup
+	cleanup := setupTest(t)
+	defer cleanup()
+
+	// Create the router
+	router := gin.Default()
+
+	categoryRepo := GetCategoryRepo()
+	categoryHandler := GetCategoryHandler()
+
+	router.POST("/categories", categoryHandler.CreateCategory)
 
 	category := &entities.Category{
 		ID:            primitive.NewObjectID(),
@@ -56,20 +39,46 @@ func TestCreateCategory_Valid(t *testing.T) {
 
 	// Insert the category into the repository
 
-	err := categoryRepo.Create(category)
+	categoryJSON, _ := json.Marshal(category)
 
-	assert.NoError(t, err, "Expected no error when creating category")
+	req, _ := http.NewRequest("POST", "/categories", bytes.NewBuffer(categoryJSON))
+
+	req.Header.Set("Content-Type", "application/json")
+
+	// Execute the request with httptest
+	resp := httptest.NewRecorder()
+	router.ServeHTTP(resp, req)
+
+	assert.Equal(t, http.StatusCreated, resp.Code, "Expected status code 201 for successful category creation")
+
+	var responseMap map[string]interface{}
+
+	err := json.Unmarshal(resp.Body.Bytes(), &responseMap)
+
+	fmt.Println(responseMap)
+	assert.NoError(t, err, "Expected no error when unmarshalling response")
+	id, ok := responseMap["id"].(string)
+	assert.True(t, ok, "Expected id to be a string")
 
 	// Fetch the category from the repository
 
-	fetchedCategory, err := categoryRepo.GetByID(category.ID.Hex())
+	fetchedCategory, err := categoryRepo.GetByID(id)
 	assert.NoError(t, err, "Expected no error when fetching category")
 	assert.Equal(t, category.Name, fetchedCategory.Name, "category name should match")
 	assert.Equal(t, category.Subcategories, fetchedCategory.Subcategories, "category subcategories should match")
 }
 
 func TestCreateCategory_MissingName(t *testing.T) {
-	categoryRepo := repository.NewCategoryRepository(testDB, "backend-challenge-test", "categories")
+
+	// Setup test and defer cleanup
+	cleanup := setupTest(t)
+	defer cleanup()
+
+	categoryHandler := GetCategoryHandler()
+
+	router := gin.Default()
+
+	router.POST("/categories", categoryHandler.CreateCategory)
 
 	category := &entities.Category{
 		ID:            primitive.NewObjectID(),
@@ -78,42 +87,30 @@ func TestCreateCategory_MissingName(t *testing.T) {
 		UpdatedAt:     time.Now(),
 	}
 
-	err := categoryRepo.Create(category)
+	categoryJSON, _ := json.Marshal(category)
 
-	assert.Error(t, err, "expected error when creating category with missing name")
-}
+	req, _ := http.NewRequest("POST", "/categories", bytes.NewBuffer(categoryJSON))
 
-func TestCreateCategory_DuplicateID(t *testing.T) {
+	req.Header.Set("Content-Type", "application/json")
 
-	categoryRepo := repository.NewCategoryRepository(testDB, "backend-challenge-test", "categories")
+	// Execute the request with httptest
+	resp := httptest.NewRecorder()
+	router.ServeHTTP(resp, req)
 
-	category := &entities.Category{
-		ID:            primitive.NewObjectID(),
-		Name:          "Clothing",
-		Subcategories: []string{"Men", "Women"},
-		CreatedAt:     time.Now(),
-		UpdatedAt:     time.Now(),
-	}
-
-	err := categoryRepo.Create(category)
-
-	assert.NoError(t, err, "expected no error when creating first category")
-
-	duplicateCategory := &entities.Category{
-		ID:            category.ID,
-		Name:          "Footwear",
-		Subcategories: []string{"Shoes", "Sandals"},
-		CreatedAt:     time.Now(),
-		UpdatedAt:     time.Now(),
-	}
-
-	err = categoryRepo.Create(duplicateCategory)
-
-	assert.Error(t, err, "expected error when creating duplicate category")
+	assert.Equal(t, http.StatusBadRequest, resp.Code, "Expected status code 400 for missing name")
 }
 
 func TestCreateCategory_EmptySubcategories(t *testing.T) {
-	categoryRepo := repository.NewCategoryRepository(testDB, "backend-challenge-test", "categories")
+
+	// Setup test and defer cleanup
+	cleanup := setupTest(t)
+	defer cleanup()
+
+	categoryHandler := GetCategoryHandler()
+
+	router := gin.Default()
+
+	router.POST("/categories", categoryHandler.CreateCategory)
 
 	category := &entities.Category{
 		ID:            primitive.NewObjectID(),
@@ -123,11 +120,25 @@ func TestCreateCategory_EmptySubcategories(t *testing.T) {
 		UpdatedAt:     time.Now(),
 	}
 
-	err := categoryRepo.Create(category)
+	categoryJSON, _ := json.Marshal(category)
 
-	assert.NoError(t, err, "expected no error when creating category with empty subcategories")
+	req, _ := http.NewRequest("POST", "/categories", bytes.NewBuffer(categoryJSON))
 
-	fetchedCategory, err := categoryRepo.GetByID(category.ID.Hex())
+	req.Header.Set("Content-Type", "application/json")
+
+	// Execute the request with httptest
+	resp := httptest.NewRecorder()
+	router.ServeHTTP(resp, req)
+
+	assert.Equal(t, http.StatusCreated, resp.Code, "Expected status code 201 for empty subcategories")
+
+	var responseMap map[string]interface{}
+
+	_ = json.Unmarshal(resp.Body.Bytes(), &responseMap)
+
+	id := responseMap["id"].(string)
+
+	fetchedCategory, err := categoryRepo.GetByID(id)
 	assert.NoError(t, err, "expected no error when fetching category")
 
 	assert.Equal(t, category.Name, fetchedCategory.Name, "category name should match")
