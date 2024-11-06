@@ -5,9 +5,10 @@ import (
 	"backend-challenge/internal/domain/repositories"
 	"context"
 	"reflect"
-	"time"
+	"strings"
 
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
@@ -88,44 +89,49 @@ func (r *productRepository) GetAll() ([]*entities.Product, error) {
 }
 
 func (r *productRepository) Create(product *entities.Product) error {
+    product.ID = primitive.NewObjectID()
+
     _, err := r.collection.InsertOne(context.TODO(), product)
     return err
 }
 
 func (r *productRepository) Update(product *entities.Product) error {
-    updateData := bson.M{}
 
-    // Helper function to add non-zero values to updateData
-    addIfNotZero := func(key string, value interface{}) {
-        if !reflect.ValueOf(value).IsZero() {
-            updateData[key] = value
+    product.ID = primitive.NewObjectID()
+    
+    typeData := reflect.TypeOf(*product)
+
+    values := reflect.ValueOf(*product)
+
+    updates := bson.D{}
+
+    for i := 1; i < typeData.NumField(); i++ {
+        field := typeData.Field(i)
+        val := values.Field(i)
+
+        jsonTag := field.Tag.Get("json")
+        tagParts := strings.Split(jsonTag, ",")
+        tag := tagParts[0]
+
+        if !isZeroType(val) {
+            update := bson.E{Key: tag, Value: val.Interface()}
+            
+            updates = append(updates, update)
         }
-    }
+        }
 
-    // Check and add each field individually
-    addIfNotZero("storeId", product.StoreID)
-    addIfNotZero("categories", product.Categories)
-    addIfNotZero("description", product.Description)
-    addIfNotZero("images", product.Images)
-    addIfNotZero("name", product.Name)
-    addIfNotZero("published", product.Published)
-    addIfNotZero("urls", product.Urls)
-    addIfNotZero("variants", product.Variants)
-    addIfNotZero("soldCount", product.SoldCount)
-    addIfNotZero("clickCount", product.ClickCount)
 
-    updateData["updatedAt"] = time.Now()
+    _, err := r.collection.UpdateOne(context.TODO(), bson.M{"_id": product.ID}, bson.M{"$set": updates})
 
-    // Only perform the update if there are fields to update
-    if len(updateData) > 1 { // > 1 because updatedAt is always present
-        _, err := r.collection.UpdateOne(context.TODO(), bson.M{"id": product.ID}, bson.M{"$set": updateData})
-        return err
-    }
+	if err != nil {
+		return err
+	}
 
-    return nil
+	return nil
 }
 
 func (r *productRepository) Delete(id string) error {
     _, err := r.collection.DeleteOne(context.TODO(), bson.M{"id": id})
     return err
 }
+
