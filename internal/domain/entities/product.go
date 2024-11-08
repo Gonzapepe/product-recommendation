@@ -16,19 +16,19 @@ func init() {
 }
 
 type Product struct {
-	ID          string      `json:"id" bson:"id,omitempty"`
-	StoreID     string      `json:"storeId,omitempty" bson:"storeId"`
-	Categories  []string    `json:"categories,omitempty" bson:"categories"`
-	Description Description `json:"description,omitempty" bson:"description"`
-	Images      []Image     `json:"images,omitempty" bson:"images"`
-	Name        Name        `json:"name,omitempty" bson:"name" validate:"required"`
-	Published   bool        `json:"published,omitempty" bson:"published"`
-	Urls        Urls        `json:"urls,omitempty" bson:"urls"`
-	Variants    []Variant   `json:"variants,omitempty" bson:"variants"`
-	SoldCount   int         `json:"soldCount,omitempty" bson:"soldCount" validate:"gte=0"`
-	ClickCount  int         `json:"clickCount,omitempty" bson:"clickCount" validate:"gte=0"`
-	CreatedAt   time.Time   `json:"createdAt,omitempty" bson:"createdAt"`
-	UpdatedAt   time.Time   `json:"updatedAt,omitempty" bson:"updatedAt"`
+	ID          primitive.ObjectID `json:"id" bson:"_id"`
+	StoreID     string             `json:"storeId,omitempty" bson:"storeId"`
+	Categories  []string           `json:"categories,omitempty" bson:"categories"`
+	Description Description        `json:"description,omitempty" bson:"description"`
+	Images      []Image            `json:"images,omitempty" bson:"images"`
+	Name        Name               `json:"name,omitempty" bson:"name" validate:"required"`
+	Published   bool               `json:"published,omitempty" bson:"published"`
+	Urls        Urls               `json:"urls,omitempty" bson:"urls"`
+	Variants    []Variant          `json:"variants,omitempty" bson:"variants"`
+	SoldCount   int                `json:"soldCount,omitempty" bson:"soldCount" validate:"gte=0"`
+	ClickCount  int                `json:"clickCount,omitempty" bson:"clickCount" validate:"gte=0"`
+	CreatedAt   time.Time          `json:"createdAt,omitempty" bson:"createdAt"`
+	UpdatedAt   time.Time          `json:"updatedAt,omitempty" bson:"updatedAt"`
 }
 
 type Category struct {

@@ -10,6 +10,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 type ProductHandler struct {
@@ -31,7 +32,14 @@ func NewProductHandler(productService services.ProductService, /*brainService se
 func (h *ProductHandler) GetProductByID(c *gin.Context) {
 	id := c.Param("id")
 
-	product, err := h.productService.GetProductByID(id)
+	productId, err := primitive.ObjectIDFromHex(id)
+
+	if err != nil {
+		HandleError(c, http.StatusBadRequest, err)
+		return
+	}
+
+	product, err := h.productService.GetProductByID(productId.Hex())
 
 	if err != nil {
 		HandleError(c, http.StatusNotFound, err)
@@ -43,9 +51,11 @@ func (h *ProductHandler) GetProductByID(c *gin.Context) {
 
 func (h *ProductHandler) GetAllProducts(c *gin.Context) {
 
-	_, limit, offset := getPaginationParams(c)
+	// _, limit, offset := getPaginationParams(c)
 
-	paginatedProducts, err := h.productService.GetPaginatedProducts(offset, limit)
+	// paginatedProducts, err := h.productService.GetPaginatedProducts(offset, limit)
+
+	allProducts, err := h.productService.GetAllProducts()
 
 	log.Printf("Error retrieving products: %v", err)
 
@@ -61,7 +71,7 @@ func (h *ProductHandler) GetAllProducts(c *gin.Context) {
 	// recommendations, metadata := h.brainService.GenerateProductSuggestions(allProducts, paginatedProducts, boundaries, rules)
 
 	c.JSON(http.StatusOK, gin.H{
-		"products": paginatedProducts,
+		"products": allProducts,
 		// "recommendations": recommendations,
 		// "recommendaiton_metadata": metadata,
 	})
@@ -144,10 +154,6 @@ func (h *ProductHandler) CreateProduct(c *gin.Context) {
 	product.CreatedAt = now
 	product.UpdatedAt = now
 
-	if product.ID == "" {
-		product.ID = generateNewID()
-	}
-
 	if err := h.productService.CreateProduct(&product); err != nil {
 		HandleError(c, http.StatusInternalServerError, err)
 		return
@@ -172,7 +178,14 @@ func (h *ProductHandler) UpdateProduct(c *gin.Context) {
 		return
 	}
 
-	product.ID = id
+	objectId, err := primitive.ObjectIDFromHex(id)
+
+	if err != nil {
+		HandleError(c, http.StatusBadRequest, err)
+		return
+	}
+	
+	product.ID = objectId
 
 	if err := h.productService.UpdateProduct(&product); err != nil {
 		

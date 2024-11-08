@@ -4,6 +4,7 @@ import (
 	"backend-challenge/internal/domain/entities"
 	"backend-challenge/internal/domain/repositories"
 	"context"
+	"log"
 	"reflect"
 	"strings"
 
@@ -25,7 +26,16 @@ func NewProductRepository(db *mongo.Client, dbName, collectionName string) repos
 
 func (r *productRepository) GetByID(id string) (*entities.Product, error) {
     var product entities.Product
-    err := r.collection.FindOne(context.TODO(), bson.M{"id": id}).Decode(&product)
+
+    objectId, err := primitive.ObjectIDFromHex(id)
+
+    if err != nil {
+        return nil, err
+    }
+
+    filter := bson.M{"_id": objectId}
+
+    err = r.collection.FindOne(context.TODO(), filter).Decode(&product)
 
     if err != nil {
         return nil, err
@@ -96,8 +106,6 @@ func (r *productRepository) Create(product *entities.Product) error {
 }
 
 func (r *productRepository) Update(product *entities.Product) error {
-
-    product.ID = primitive.NewObjectID()
     
     typeData := reflect.TypeOf(*product)
 
@@ -121,11 +129,16 @@ func (r *productRepository) Update(product *entities.Product) error {
         }
 
 
-    _, err := r.collection.UpdateOne(context.TODO(), bson.M{"_id": product.ID}, bson.M{"$set": updates})
+    result, err := r.collection.UpdateOne(context.TODO(), bson.M{"_id": product.ID}, bson.M{"$set": updates})
 
 	if err != nil {
 		return err
 	}
+
+    if result.ModifiedCount == 0 {
+        log.Println("Produt found but no update performed")
+        return nil
+    }
 
 	return nil
 }
