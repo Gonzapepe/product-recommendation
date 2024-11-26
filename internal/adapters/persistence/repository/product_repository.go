@@ -144,7 +144,13 @@ func (r *productRepository) Update(product *entities.Product) error {
 }
 
 func (r *productRepository) Delete(id string) error {
-    _, err := r.collection.DeleteOne(context.TODO(), bson.M{"id": id})
+    objectId, err := primitive.ObjectIDFromHex(id)
+
+    if err != nil {
+        return err
+    }
+
+    _, err = r.collection.DeleteOne(context.TODO(), bson.M{"_id": objectId})
     return err
 }
 
