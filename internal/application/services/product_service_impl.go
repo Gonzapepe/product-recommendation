@@ -7,10 +7,23 @@ import (
 
 type productService struct {
 	repo repositories.ProductRepository
+    recommender *RecommendationService
 }
 
-func NewProductService(repo repositories.ProductRepository) ProductService {
-	return &productService{repo: repo}
+func NewProductService(repo repositories.ProductRepository, recommender *RecommendationService) ProductService {
+	return &productService{repo: repo, recommender: recommender}
+}
+
+func (s *productService) ComputeFeatureVectors() map[string]map[string]float64 {
+    products, _ := s.repo.GetAll()
+
+    featureVectors := make(map[string]map[string]float64)
+
+    for _, product := range products {
+        featureVectors[product.ID.Hex()] = s.recommender.ExtractFeatureVector(*product)
+    }
+
+    return featureVectors
 }
 
 func (s *productService) GetProductByID(id string) (*entities.Product, error) {

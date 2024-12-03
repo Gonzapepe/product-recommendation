@@ -34,7 +34,9 @@ func main() {
 
 	productRepo := repository.NewProductRepository(mongoClient, "backend-challenge", "products")
 
-	productService = services.NewProductService(productRepo)
+	recommendationService := services.NewRecommendationService()
+
+	productService = services.NewProductService(productRepo, recommendationService)
 
 	categoryRepo := repository.NewCategoryRepository(mongoClient, "backend-challenge", "categories")
 	
