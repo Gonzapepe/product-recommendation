@@ -14,6 +14,24 @@ func NewProductService(repo repositories.ProductRepository, recommender *Recomme
 	return &productService{repo: repo, recommender: recommender}
 }
 
+func (s *productService) GetRecommendations(productID string) ([]*entities.Product, error) {
+
+    // Fetch the target product
+    targetProduct, err := s.repo.GetByID(productID)
+
+    if err != nil {
+        return nil, err
+    }
+
+    allProducts, err := s.repo.GetAll()
+
+    if err != nil {
+        return nil, err
+    }
+
+    return s.recommender.RecommendSimilarProducts(*targetProduct, allProducts), nil
+}
+
 func (s *productService) ComputeFeatureVectors() map[string]map[string]float64 {
     products, _ := s.repo.GetAll()
 
