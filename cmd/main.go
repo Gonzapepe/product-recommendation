@@ -60,6 +60,7 @@ func InitRoutes() {
 	v1.POST("/products", productHandler.CreateProduct)
 	v1.GET("/products", productHandler.GetAllProducts)
 	v1.GET("/products/:id", productHandler.GetProductByID)
+	v1.GET("/products/:id/recommendations", productHandler.GetRecommendations)
 	v1.PUT("/products/:id", productHandler.UpdateProduct)
 	v1.DELETE("products/:id", productHandler.DeleteProduct)
 

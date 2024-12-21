@@ -209,3 +209,16 @@ func (h *ProductHandler) DeleteProduct(c *gin.Context) {
 	
 	c.Status(http.StatusNoContent)
 }
+
+func (h *ProductHandler) GetRecommendations(c *gin.Context) {
+	productID := c.Param("id")
+
+	recommendations, err := h.productService.GetRecommendations(productID)
+
+	if err != nil {
+		HandleError(c, http.StatusInternalServerError, err)
+		return
+	}
+
+ 	c.JSON(http.StatusOK, recommendations)
+}

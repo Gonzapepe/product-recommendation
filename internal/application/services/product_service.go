@@ -4,6 +4,8 @@ import "backend-challenge/internal/domain/entities"
 
 
 type ProductService interface {
+    GetRecommendations(productID string) ([]*entities.Product, error)
+    ComputeFeatureVectors() map[string]map[string]float64
     GetProductByID(id string) (*entities.Product, error)
     GetPaginatedProducts(offset, limit int) ([]*entities.Product, error)
     GetAllProducts() ([]*entities.Product, error)
