@@ -14,7 +14,7 @@ func NewProductService(repo repositories.ProductRepository, recommender *Recomme
 	return &productService{repo: repo, recommender: recommender}
 }
 
-func (s *productService) GetRecommendations(productID string) ([]*entities.Product, error) {
+func (s *productService) GetRecommendations(productID string) ([]*Recommendation, error) {
 
     // Fetch the target product
     targetProduct, err := s.repo.GetByID(productID)

@@ -7,42 +7,44 @@ import (
 	"strings"
 )
 
-type RecommendationService struct {}
+type Recommendation struct {
+	Product         *entities.Product `json:"product"`
+	SimilarityScore float64           `json:"similarity_score"`
+}
+
+type RecommendationService struct{}
 
 func NewRecommendationService() *RecommendationService {
 	return &RecommendationService{}
 }
 
 // RecommendSimilarProducts recommends similar products based on a target product
-func (s *RecommendationService) RecommendSimilarProducts (targetProduct entities.Product, allProducts []*entities.Product) []*entities.Product {
+func (s *RecommendationService) RecommendSimilarProducts(targetProduct entities.Product, allProducts []*entities.Product) []*Recommendation {
 	targetVector := s.ExtractFeatureVector(targetProduct)
 
-	similarities := make([]struct {
-		Product *entities.Product
-		Similarity float64
-	}, len(allProducts))
-
+	recommendations := []*Recommendation{}
 
 	// Calculate similarity for all products
-	for i, product := range allProducts {
+	for _, product := range allProducts {
 		if product.ID != targetProduct.ID { // Exclude the target product itself
 			productVector := s.ExtractFeatureVector(*product)
-			similarities[i] = struct{Product *entities.Product; Similarity float64}{
-				Product: product,
-				Similarity: s.CosineSimilarity(targetVector, productVector),
-			}
+			similarity := s.CosineSimilarity(targetVector, productVector)
+
+			recommendations = append(recommendations, &Recommendation{
+				Product:         product,
+				SimilarityScore: similarity,
+			})
 		}
 	}
 
 	// Sort by similarity score
-	sort.Slice(similarities, func(i, j int) bool {
-		return similarities[i].Similarity > similarities[j].Similarity
+	sort.Slice(recommendations, func(i, j int) bool {
+		return recommendations[i].SimilarityScore > recommendations[j].SimilarityScore
 	})
 
 	// Return top 5 recommendations.
-	var recommendations []*entities.Product
-	for i := 0; i < len(similarities) && i < 5; i++ {
-		recommendations = append(recommendations, similarities[i].Product)
+	if len(recommendations) > 5 {
+		recommendations = recommendations[:5]
 	}
 
 	return recommendations
@@ -85,12 +87,12 @@ func (s *RecommendationService) ExtractFeatureVector(product entities.Product) m
 		features["category_"+strings.ToLower(category)] = 1.0
 	}
 
-	// Add popularity metrics 
+	// Add popularity metrics
 	features["click_count"] = normalize(float64(product.ClickCount))
 	features["sold_count"] = normalize(float64(product.SoldCount))
 
 	// Add textual features (simplified; extend with NLP later)
-	words := tokenize(s.getLocalizedStringText(product.Name.LocalizedString) + " " +s.getLocalizedStringText(product.Description.LocalizedString)) 
+	words := tokenize(s.getLocalizedStringText(product.Name.LocalizedString) + " " + s.getLocalizedStringText(product.Description.LocalizedString))
 
 	for _, word := range words {
 		features["word_"+strings.ToLower(word)] += 1.0
@@ -129,4 +131,3 @@ func normalize(value float64) float64 {
 func tokenize(text string) []string {
 	return strings.Fields(strings.ToLower(text))
 }
-
