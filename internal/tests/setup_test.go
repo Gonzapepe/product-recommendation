@@ -20,6 +20,7 @@ var (
 	testClient      *mongo.Client
 	categoryRepo    repositories.CategoryRepository
 	productRepo     repositories.ProductRepository
+	recommendationService *services.RecommendationService
 	categoryService services.CategoryService
 	productService  services.ProductService
 	categoryHandler *handlers.CategoryHandler
@@ -49,8 +50,9 @@ func TestMain(m *testing.M) {
 	// Initialize repositories and services
 	categoryRepo = repository.NewCategoryRepository(testClient, "backend-challenge-test", "categories")
 	productRepo = repository.NewProductRepository(testClient, "backend-challenge-test", "products")
+	recommendationService = services.NewRecommendationService()
 	categoryService = services.NewCategoryService(categoryRepo)
-	productService = services.NewProductService(productRepo)
+	productService = services.NewProductService(productRepo, recommendationService)
 
 	// Initialize handlers
 	categoryHandler = handlers.NewCategoryHandler(categoryService)
@@ -106,6 +108,13 @@ func GetCategoryHandler() *handlers.CategoryHandler {
 	return categoryHandler
 }
 
+func GetProductRepo() repositories.ProductRepository {
+	if productRepo == nil {
+		panic("Category repository not initialized")
+	}
+	return productRepo
+}
+
 func GetProductHandler() *handlers.ProductHandler {
 	if productHandler == nil {
 		panic("Category repository not initialized")
@@ -118,4 +127,11 @@ func GetCategoryRepo() repositories.CategoryRepository {
 		panic("Category repository not initialized")
 	}
 	return categoryRepo
+}
+
+func GetRecommendationService() *services.RecommendationService {
+	if recommendationService == nil {
+		panic("Category repository not initialized")
+	}
+	return recommendationService
 }
