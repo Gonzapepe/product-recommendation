@@ -5,6 +5,9 @@ import (
 	"math"
 	"sort"
 	"strings"
+	"unicode"
+
+	"github.com/kljensen/snowball"
 )
 
 type Recommendation struct {
@@ -92,31 +95,37 @@ func (s *RecommendationService) ExtractFeatureVector(product entities.Product) m
 	features["sold_count"] = normalize(float64(product.SoldCount))
 
 	// Add textual features (simplified; extend with NLP later)
-	words := tokenize(s.getLocalizedStringText(product.Name.LocalizedString) + " " + s.getLocalizedStringText(product.Description.LocalizedString))
+	nameTokens := s.tokenizeLocalizedString(product.Name.LocalizedString)
+	descriptionTokens := s.tokenizeLocalizedString(product.Description.LocalizedString)
 
-	for _, word := range words {
-		features["word_"+strings.ToLower(word)] += 1.0
+	// Combine tokens
+	tokens := append(nameTokens, descriptionTokens...)
+
+	
+
+	for _, token := range tokens {
+		features["word_"+token] += 1.0
 	}
 
 	return features
 }
 
-func (s *RecommendationService) getLocalizedStringText(localized entities.LocalizedString) string {
-	var texts []string
+func (s *RecommendationService) tokenizeLocalizedString(localized entities.LocalizedString) []string {
+	var tokens []string
 
 	if localized.En != nil {
-		texts = append(texts, *localized.En)
+		tokens = append(tokens, tokenize(*localized.En, "en")...)
 	}
 
 	if localized.Es != nil {
-		texts = append(texts, *localized.Es)
+		tokens = append(tokens, tokenize(*localized.Es, "es")...)
 	}
 
 	if localized.Pt != nil {
-		texts = append(texts, *localized.Pt)
+		tokens = append(tokens, tokenize(*localized.Pt, "pt")...)
 	}
 
-	return strings.Join(texts, " ")
+	return tokens
 }
 
 // normalize scales a value to a range of 0 to 1
@@ -128,6 +137,45 @@ func normalize(value float64) float64 {
 	return 1.0 / (1.0 + math.Exp(-value)) // Sigmoid normalization
 }
 
-func tokenize(text string) []string {
-	return strings.Fields(strings.ToLower(text))
+// Stopwords for different languages
+var stopwords = map[string]map[string]bool{
+	"en": {
+		"the": true, "is": true, "and": true, "a": true, "of": true, "to": true,
+	},
+	"es": {
+		"el": true, "es": true, "y": true, "un": true, "de": true, "para": true,
+	},
+	"pt": {
+		"o": true, "é": true, "e": true, "um": true, "de": true, "para": true,
+	},
+}
+
+
+// tokenize processes text by removing stopwords, handling punctuation, and applying stemming
+func tokenize(text, lang string) []string {
+	// Default to English stopwords if no language is specified
+	langStopwords, exists := stopwords[lang]
+	if !exists {
+		langStopwords = stopwords["en"]
+	}
+
+	// Split text into words and remove punctuation
+	words := strings.FieldsFunc(strings.ToLower(text), func(r rune) bool {
+		return !unicode.IsLetter(r) && !unicode.IsNumber(r) // Remove non-alphanumeric
+	})
+
+	// Filter out stopwords and apply stemming
+	var tokens []string
+	for _, word := range words {
+		if !langStopwords[word] { // Skip stopwords
+			stemmed, err := snowball.Stem(word, lang, true) // Apply stemming for the specified language
+			if err == nil {
+				tokens = append(tokens, stemmed)
+			} else {
+				tokens = append(tokens, word) // Fallback to original word
+			}
+		}
+	}
+
+	return tokens
 }
