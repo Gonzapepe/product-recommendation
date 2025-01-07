@@ -15,6 +15,9 @@ import (
 
 func TestProductCreation(t *testing.T) {
 
+	cleanup := setupTest(t)
+	defer cleanup()
+
 	productRepo := repository.NewProductRepository(testClient, "backend-challenge-test", "products")
 
 	product := &entities.Product{
@@ -122,6 +125,9 @@ func TestProductDeletion(t *testing.T) {
 }
 
 func TestProductUpdate(t *testing.T) {
+	cleanup := setupTest(t)
+	defer cleanup()
+
 	productRepo := repository.NewProductRepository(testClient, "backend-challenge-test", "products")
 
 	initialProduct := &entities.Product{
