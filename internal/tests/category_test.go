@@ -145,3 +145,151 @@ func TestCreateCategory_EmptySubcategories(t *testing.T) {
 	assert.Empty(t, fetchedCategory.Subcategories, "category subcategories should be empty")
 
 }
+
+func TestCategoryCreation(t *testing.T) {
+	// Setup test and defer cleanup
+	cleanup := setupTest(t)
+	defer cleanup()
+
+	categoryRepo := GetCategoryRepo()
+
+	category := &entities.Category{
+		ID:            primitive.NewObjectID(),
+		Name:          "Electronics",
+		Subcategories: []string{"Phones", "Laptops"},
+		CreatedAt:     time.Now(),
+		UpdatedAt:     time.Now(),
+	}
+
+	// Insert the category into the repository
+	err := categoryRepo.Create(category)
+	assert.NoError(t, err, "Expected no error when creating category")
+
+
+	savedCategory, err := categoryRepo.GetByID(category.ID.Hex())
+
+	assert.NoError(t, err, "Expected no error when fetching category")
+
+	assert.Equal(t, category.Name, savedCategory.Name, "category name should match")
+	assert.Equal(t, category.Subcategories, savedCategory.Subcategories, "category subcategories should match")
+
+}
+
+func TestGetAllCategories(t *testing.T) {
+	// Setup test and defer cleanup
+	cleanup := setupTest(t)
+	defer cleanup()
+
+	categoryRepo := GetCategoryRepo()
+
+	categoryA := &entities.Category{
+		ID:            primitive.NewObjectID(),
+		Name:          "Electronics",
+		Subcategories: []string{"Phones", "Laptops"},
+		CreatedAt:     time.Now(),
+		UpdatedAt:     time.Now(),
+	}
+
+	categoryB := &entities.Category{
+		ID:            primitive.NewObjectID(),
+		Name:          "Electronics B",
+		Subcategories: []string{"TVs", "Soundbars"},
+		CreatedAt:     time.Now(),
+		UpdatedAt:     time.Now(),
+	}
+
+	categoryC := &entities.Category{
+		ID:            primitive.NewObjectID(),
+		Name:          "Electronics C",
+		Subcategories: []string{"Gaming Consoles", "Speakers"},
+		CreatedAt:     time.Now(),
+		UpdatedAt:     time.Now(),
+	}
+
+	// Insert the categories into the repository
+	err := categoryRepo.Create(categoryA)
+	assert.NoError(t, err, "Expected no error when creating category")
+
+	err = categoryRepo.Create(categoryB)
+	assert.NoError(t, err, "Expected no error when creating category")
+
+	err = categoryRepo.Create(categoryC)
+	assert.NoError(t, err, "Expected no error when creating category")
+
+	// Get all categories from the repository
+	categories, err := categoryRepo.GetAll()
+
+	fmt.Printf("returned categories: %+v\n", categories)
+
+	assert.NoError(t, err, "Expected no error when fetching categories")
+	assert.Equal(t, 3, len(categories), "Expected 3 categories to be returned")
+	assert.Condition(t, func() bool {
+		for _, category := range categories {
+			if category.Name == categoryA.Name &&
+				category.Subcategories[0] == categoryA.Subcategories[0] {
+				return true
+			}
+		}
+		return false
+	}, "Expected category A to be returned")
+
+}
+
+func TestUpdateCategory(t *testing.T) {
+	// Setup test and defer cleanup
+	cleanup := setupTest(t)	
+	defer cleanup()
+
+	categoryRepo := GetCategoryRepo()
+
+	category := &entities.Category{
+		ID:            primitive.NewObjectID(),
+		Name:          "Electronics",
+		Subcategories: []string{"Phones", "Laptops"},
+		CreatedAt:     time.Now(),
+		UpdatedAt:     time.Now(),
+	}
+
+	// Insert the category into the repository
+	err := categoryRepo.Create(category)
+	assert.NoError(t, err, "Expected no error when creating category")
+
+	// Update the category
+	category.Name = "Electronics B"
+	err = categoryRepo.Update(category)
+	assert.NoError(t, err, "Expected no error when updating category")
+
+	// Fetch the updated category from the repository
+	fetchedCategory, err := categoryRepo.GetByID(category.ID.Hex())
+	assert.NoError(t, err, "Expected no error when fetching category")
+
+	assert.Equal(t, category.Name, fetchedCategory.Name, "category name should match")
+}
+
+func TestDeleteCategory(t *testing.T) {
+	// Setup test and defer cleanup
+	cleanup := setupTest(t)
+	defer cleanup()
+
+	categoryRepo := GetCategoryRepo()
+
+	category := &entities.Category{
+		ID:            primitive.NewObjectID(),
+		Name:          "Electronics",
+		Subcategories: []string{"Phones", "Laptops"},
+		CreatedAt:     time.Now(),
+		UpdatedAt:     time.Now(),
+	}
+
+	// Insert the category into the repository
+	err := categoryRepo.Create(category)	
+	assert.NoError(t, err, "Expected no error when creating category")
+
+	// Delete the category	
+	err = categoryRepo.Delete(category.ID.Hex())
+	assert.NoError(t, err, "Expected no error when deleting category")
+
+	// Fetch the deleted category from the repository
+	_, err = categoryRepo.GetByID(category.ID.Hex())
+	assert.Error(t, err, "Expected error when fetching deleted category")
+}
