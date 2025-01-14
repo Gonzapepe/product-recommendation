@@ -4,9 +4,15 @@ import (
 	"backend-challenge/internal/adapters/persistence/repository"
 	"backend-challenge/internal/application/services"
 	"backend-challenge/internal/domain/entities"
+	"bytes"
+	"encoding/json"
+	"fmt"
+	"net/http"
+	"net/http/httptest"
 	"testing"
 	"time"
 
+	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -235,4 +241,75 @@ func TestGetRecommendations(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, recommendations[0].Product.ID, productB.ID)
 
+}
+
+
+func TestCreateProductRoute(t *testing.T) {
+	cleanup := setupTest(t)
+	defer cleanup()
+
+	router := gin.Default()
+
+	productRepo := GetProductRepo()
+	productHandler := GetProductHandler()
+
+	router.POST("/products", productHandler.CreateProduct)
+
+	initialProduct := &entities.Product{
+		ID:          primitive.NewObjectID(),
+		StoreID:     "test-store-id",
+		Categories: []string{"Test Category"},
+		Description: entities.Description{
+			LocalizedString: entities.LocalizedString{
+				En: ptr("Test Description"),
+			},
+		},
+		Images: []entities.Image{
+			{
+				ID:       1,
+				Src:      "http://example.com/image.png",
+				Position: 1,
+				Alt:      []entities.Alt{{LocalizedString: entities.LocalizedString{En: ptr("Test Alt")}}},
+			},
+		},
+		Name: entities.Name{
+			LocalizedString: entities.LocalizedString{
+				En: ptr("Test Product"),
+			},
+		},
+		Published:   true,
+		Urls:        entities.Urls{CanonicalURL: "http://example.com/product", VideoURL: ptr("http://example.com/video.mp4")},
+		Variants:    []entities.Variant{{ID: "variant-id", Value: "test-value", Stock: 100, Price: 29.99}},
+		SoldCount:   50,
+		ClickCount:  10,
+		CreatedAt:   time.Now(),
+		UpdatedAt:   time.Now(),
+	}
+
+	productJSON, _ := json.Marshal(initialProduct)
+
+	req, _ := http.NewRequest("POST", "/products", bytes.NewBuffer(productJSON))
+
+	req.Header.Set("Content-Type", "application/json")
+
+	// Execute the request with httptest
+	resp := httptest.NewRecorder()
+	router.ServeHTTP(resp, req)
+
+	assert.Equal(t, http.StatusCreated, resp.Code, "expected status code 201 for valid product")
+
+	var responseMap map[string]interface{}
+	
+	fmt.Printf("Response body: %s\n", resp.Body.String())
+	
+	err := json.Unmarshal(resp.Body.Bytes(), &responseMap)
+	assert.NoError(t, err)
+
+	id, ok := responseMap["id"].(string)
+	assert.True(t, ok, "ID should be a string")
+
+	fetchedProduct, err := productRepo.GetByID(id)
+	assert.NoError(t, err)
+	assert.Equal(t, initialProduct.Name.LocalizedString.En, fetchedProduct.Name.LocalizedString.En)
+	
 }
